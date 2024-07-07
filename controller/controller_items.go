@@ -2,7 +2,9 @@ package controller
 
 import (
 	"http-db-exp/model"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo"
 )
@@ -40,4 +42,34 @@ func (con Controller) ItemList(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, result.Error.Error())
 	}
 	return c.JSON(http.StatusOK, items)
+}
+
+func (con *Controller) ItemListWithoutDB(c echo.Context) error {
+	con.Mutex.Lock()
+	slog.Debug("items", con.Items)
+	con.Mutex.Unlock()
+	return c.JSON(http.StatusOK, con.Items)
+}
+
+func (con *Controller) ItemUpdateVariable(c echo.Context) error {
+	go func(conn *Controller) {
+		time.Sleep(1 * time.Second)
+		slog.Debug("Start updating item variable")
+		for {
+			conn.Mutex.Lock()
+			var items []model.Item
+			result := conn.DB.Find(&items)
+			if result.Error != nil {
+				slog.Error(result.Error.Error())
+				c.Set("error", result.Error.Error())
+				return
+			}
+			slog.Debug("items", items)
+			conn.Items = items
+			slog.Debug("Finish updating item variable")
+			time.Sleep(1 * time.Second)
+			conn.Mutex.Unlock()
+		}
+	}(con)
+	return c.JSON(http.StatusOK, "Start updating item variable")
 }

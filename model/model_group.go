@@ -1,8 +1,7 @@
 package model
 
-type Item struct {
+type Group struct {
 	ModelBase        // ID, CreatedAt, UpdatedAt, DeletedAt
 	Name      string `json:"name"`
-	Price     int    `json:"price"`
-	Quantity  int    `json:"quantity"`
+	User      []User `gorm:"many2many:user_groups;"`
 }

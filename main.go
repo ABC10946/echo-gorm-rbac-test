@@ -29,7 +29,7 @@ func main() {
 		return
 	}
 
-	con := controller.Controller{DB: db}
+	con := controller.Controller{DB: db, Items: []model.Item{}}
 
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
@@ -38,14 +38,9 @@ func main() {
 
 	e.POST("/items", con.ItemPost)
 	e.GET("/items", con.ItemList)
+	e.GET("/itemsWithoutDB", con.ItemListWithoutDB)
+	e.GET("/startUpdateItemVariable", con.ItemUpdateVariable)
 
 	e.Use(middleware.Logger())
-	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		result := db.Where("username = ? AND password = ?", username, password).First(&model.User{})
-		if result.Error != nil {
-			return false, nil
-		}
-		return true, nil
-	}))
 	e.Logger.Debug(e.Start(":1234"))
 }
